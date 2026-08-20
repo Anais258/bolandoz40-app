@@ -1,0 +1,15 @@
+{
+  "name": "40 ans Anaïs et Anne-Sophie, Rencontres et Retrouvailles",
+  "short_name": "40 ans A&AS",
+  "description": "Organisation partagée des 40 ans d'Anaïs & Anne-Sophie à Bolandoz",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F4EEE3",
+  "theme_color": "#3B5773",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
