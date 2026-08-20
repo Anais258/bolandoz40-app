@@ -137,6 +137,9 @@ async function boot() {
     await applySamuelHouseholdDetailsOnce();
     await applyFridayPollOnce();
     await applySaturdayPollOnce();
+    await applyConversationUpdate1Once();
+    await assignGroupsOnce();
+    await seedProgrammeOnce();
   } catch (e) {
     console.error("Erreur pendant la mise à jour des données (l'appli continue quand même)", e);
   }
@@ -145,8 +148,10 @@ async function boot() {
   initGuests();
   initBudget();
   initTasks();
+  initProgramme();
   initNotes();
   document.getElementById("btn-seed").addEventListener("click", runSeed);
+  document.getElementById("btn-force-refresh").addEventListener("click", forceRefresh);
 }
 
 // ------------------------------------------------------------------
@@ -178,63 +183,63 @@ function supplyToTodo(s) {
   };
 }
 const guestsSeed = [
-  { name: "Aline", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Arnaud Heinselin", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Bernadette Fongaufier", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Voisine · Couchage samedi" },
-  { name: "Céline Fieux", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Eliane Menegain", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "Maman d'Anne-Sophie" },
-  { name: "Émilie", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Jean Menegain", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Couchage samedi" },
-  { name: "Joanne Leroy", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Marie", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Copine d'Anne-Sophie · Couchage samedi" },
-  { name: "Mathéo Bénéteau de Laprairie", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Nadège", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "Copine de Samuel" },
-  { name: "Nelly Guilbert", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "Cras'Tier" },
-  { name: "Nicolas", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "Papa de Marius" },
-  { name: "Papa", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Pauline Grandmottet", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Copine d'Anne-Sophie · Couchage samedi" },
-  { name: "Raphaële Masure", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Copine d'Anne-Sophie · Couchage vendredi et samedi" },
-  { name: "Samuel Guyon", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Sonia Millesse", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Stéphanie Masini", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Thana", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "Maman de Jade, copine de Lola" },
-  { name: "Valérie Heinselin", phone: "", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Alexis", phone: "+33 6 65 91 07 00", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Aurélie Robin", phone: "+33 6 89 12 35 56", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Couchage samedi" },
-  { name: "Charles C", phone: "+33 7 86 14 84 32", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Couchage samedi" },
-  { name: "Clémence", phone: "+33 6 37 21 53 18", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Corinne", phone: "+33 6 74 76 64 56", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Delphine Pommier", phone: "+49 177 4308415", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Couchage vendredi et samedi" },
-  { name: "Elise", phone: "+33 6 72 16 72 67", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Couchage samedi" },
-  { name: "Emilie", phone: "+33 6 68 23 16 59", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Couchage vendredi et samedi" },
-  { name: "Emy", phone: "+33 7 70 70 46 44", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Couchage samedi" },
-  { name: "Estelle", phone: "+33 7 69 33 90 41", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Couchage samedi" },
-  { name: "François", phone: "+33 6 78 82 45 72", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Couchage samedi" },
-  { name: "Guillaume", phone: "+33 6 30 05 60 24", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "jacquenotjulien", phone: "+33 6 30 60 07 44", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Jocelyne", phone: "+33 6 37 45 09 89", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Laetitia Tremel", phone: "+33 6 51 00 66 50", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Couchage vendredi" },
-  { name: "Marie Gillard", phone: "+33 6 85 34 90 94", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Couchage samedi" },
-  { name: "Marion", phone: "+33 6 72 73 00 28", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Mathilde", phone: "+33 7 69 28 69 17", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Mélissa", phone: "+33 6 06 80 26 22", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Couchage samedi" },
-  { name: "Menegain", phone: "+33 6 43 07 51 37", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Michel", phone: "+33 6 88 45 40 44", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Nicole Prin", phone: "+33 6 58 00 58 42", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Pierre", phone: "+33 6 52 69 16 04", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Sainte-cluque", phone: "+33 6 35 80 76 11", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Samuel Sugirtharaj", phone: "+33 6 99 57 70 44", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Couchage samedi" },
-  { name: "Simon", phone: "+33 6 29 40 76 51", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Steph", phone: "+33 6 35 59 71 97", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Couchage vendredi et samedi" },
-  { name: "Steven", phone: "+33 6 43 54 17 32", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Couchage vendredi et samedi" },
-  { name: "Sylvain", phone: "+33 6 31 89 94 82", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Thibault", phone: "+33 7 69 98 28 99", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: true, reminderSent: false, notes: "Couchage samedi" },
-  { name: "Thomas", phone: "+33 6 77 43 10 94", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "Veronique", phone: "+33 6 80 54 19 64", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "" },
-  { name: "+33 6 32 88 79 69", phone: "+33 6 32 88 79 69", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "Nom à identifier" },
-  { name: "+33 6 59 74 00 15", phone: "+33 6 59 74 00 15", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "Nom à identifier" },
-  { name: "+33 6 77 20 69 23", phone: "+33 6 77 20 69 23", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "Nom à identifier" },
-  { name: "+33 7 88 48 28 64", phone: "+33 7 88 48 28 64", status: "En attente", group: "Les deux", adults: 0, kids: 0, room: "", team: "", diet: "", lodging: false, reminderSent: false, notes: "Nom à identifier" },
+  { name: "Aline", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Arnaud Heinselin", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Bernadette Fongaufier", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Voisine · Couchage samedi" },
+  { name: "Céline Fieux", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Eliane Menegain", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Maman d'Anne-Sophie" },
+  { name: "Émilie", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Jean Menegain", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
+  { name: "Joanne Leroy", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Marie", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Copine d'Anne-Sophie · Couchage samedi" },
+  { name: "Mathéo Bénéteau de Laprairie", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Nadège", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Copine de Samuel" },
+  { name: "Nelly Guilbert", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Cras'Tier" },
+  { name: "Nicolas", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Papa de Marius" },
+  { name: "Papa", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Pauline Grandmottet", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Copine d'Anne-Sophie · Couchage samedi" },
+  { name: "Raphaële Masure", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Copine d'Anne-Sophie · Couchage vendredi et samedi" },
+  { name: "Samuel Guyon", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Sonia Millesse", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Stéphanie Masini", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Thana", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Maman de Jade, copine de Lola" },
+  { name: "Valérie Heinselin", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Alexis", phone: "+33 6 65 91 07 00", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Aurélie Robin", phone: "+33 6 89 12 35 56", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
+  { name: "Charles C", phone: "+33 7 86 14 84 32", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
+  { name: "Clémence", phone: "+33 6 37 21 53 18", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Corinne", phone: "+33 6 74 76 64 56", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Delphine Pommier", phone: "+49 177 4308415", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage vendredi et samedi" },
+  { name: "Elise", phone: "+33 6 72 16 72 67", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
+  { name: "Emilie", phone: "+33 6 68 23 16 59", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage vendredi et samedi" },
+  { name: "Emy", phone: "+33 7 70 70 46 44", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
+  { name: "Estelle", phone: "+33 7 69 33 90 41", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
+  { name: "François", phone: "+33 6 78 82 45 72", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
+  { name: "Guillaume", phone: "+33 6 30 05 60 24", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "jacquenotjulien", phone: "+33 6 30 60 07 44", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Jocelyne", phone: "+33 6 37 45 09 89", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Laetitia Tremel", phone: "+33 6 51 00 66 50", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage vendredi" },
+  { name: "Marie Gillard", phone: "+33 6 85 34 90 94", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
+  { name: "Marion", phone: "+33 6 72 73 00 28", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Mathilde", phone: "+33 7 69 28 69 17", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Mélissa", phone: "+33 6 06 80 26 22", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
+  { name: "Menegain", phone: "+33 6 43 07 51 37", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Michel", phone: "+33 6 88 45 40 44", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Nicole Prin", phone: "+33 6 58 00 58 42", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Pierre", phone: "+33 6 52 69 16 04", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Sainte-cluque", phone: "+33 6 35 80 76 11", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Samuel Sugirtharaj", phone: "+33 6 99 57 70 44", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
+  { name: "Simon", phone: "+33 6 29 40 76 51", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Steph", phone: "+33 6 35 59 71 97", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage vendredi et samedi" },
+  { name: "Steven", phone: "+33 6 43 54 17 32", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage vendredi et samedi" },
+  { name: "Sylvain", phone: "+33 6 31 89 94 82", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Thibault", phone: "+33 7 69 98 28 99", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
+  { name: "Thomas", phone: "+33 6 77 43 10 94", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "Veronique", phone: "+33 6 80 54 19 64", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
+  { name: "+33 6 32 88 79 69", phone: "+33 6 32 88 79 69", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Nom à identifier" },
+  { name: "+33 6 59 74 00 15", phone: "+33 6 59 74 00 15", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Nom à identifier" },
+  { name: "+33 6 77 20 69 23", phone: "+33 6 77 20 69 23", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Nom à identifier" },
+  { name: "+33 7 88 48 28 64", phone: "+33 7 88 48 28 64", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Nom à identifier" },
 ];
 
 async function migrationRan(key) {
@@ -320,6 +325,66 @@ async function renameOldCategories() {
 // ------------------------------------------------------------------
 let notesDoc = null;
 let notesSaveTimer = null;
+
+// ------------------------------------------------------------------
+// PROGRAMME DU WEEK-END — un seul bloc de texte modifiable par jour.
+// ------------------------------------------------------------------
+let programmeData = [];
+
+function initProgramme() {
+  Store.subscribe("programme", (arr) => { programmeData = arr; renderProgramme(); });
+  document.getElementById("btn-edit-prog-samedi").addEventListener("click", () => openProgrammeModal("Samedi"));
+  document.getElementById("btn-edit-prog-dimanche").addEventListener("click", () => openProgrammeModal("Dimanche"));
+}
+
+function programmeTextFor(day) {
+  const doc = programmeData.find(p => p.day === day);
+  return doc ? (doc.text || "") : "";
+}
+
+function renderProgramme() {
+  document.getElementById("programme-samedi-view").textContent = programmeTextFor("Samedi") || "Rien pour l'instant.";
+  document.getElementById("programme-dimanche-view").textContent = programmeTextFor("Dimanche") || "Rien pour l'instant.";
+}
+
+function openProgrammeModal(day) {
+  const doc = programmeData.find(p => p.day === day);
+  const fields = `
+    <div class="field"><label>Programme du ${day}</label><textarea name="text" rows="12">${doc ? escapeHtml(doc.text || "") : ""}</textarea></div>
+  `;
+  openModal(`Modifier le programme du ${day}`, fields, {
+    saveLabel: "Enregistrer",
+    onSave: async (data) => {
+      if (doc) await Store.update("programme", doc.id, { text: data.text });
+      else await Store.add("programme", { day, text: data.text });
+    }
+  });
+}
+
+// Reprend le planning déjà défini comme point de départ éditable, une seule fois.
+const programmeSeed = [
+  { day: "Samedi", text: [
+    "11h00–13h30 — Installation logistique (déco, tables, buffet)",
+    "14h00 — Ouverture des portes, accueil, installation chambres/dortoirs",
+    "14h30–15h00 — Constitution des 4 équipes, ateliers blason/chanson, briefing Olympiades",
+    "15h00–17h00 — Olympiades — 4 épreuves x 15 min, 3 pôles (rotation)",
+    "16h00 — Lancement de la cuisson du méchoui (prestataire)",
+    "17h00–17h30 — Grand Final \"Inter-Chambrées\"",
+    "17h30–18h00 — Résultats, remise des prix, détente",
+    "18h30 — Apéritif officiel (parents) — Crémant, bières locales",
+    "20h30 — Banquet — méchoui + accompagnements maison",
+    "22h00 — Fromages & gâteau d'anniversaire",
+    "23h00… — Soirée dansante (DJ)"
+  ].join("\n") },
+  { day: "Dimanche", text: [
+    "~9h30–11h30 — Brunch",
+    "Fin de matinée — Rangement, ménage, restitution de la salle",
+    "Début d'après-midi — Départ de Bolandoz"
+  ].join("\n") }
+];
+async function seedProgrammeOnce() {
+  await Store.seedIfEmpty("programme", programmeSeed);
+}
 
 function initNotes() {
   const ta = document.getElementById("notes-textarea");
@@ -425,6 +490,65 @@ async function applySamuelHouseholdDetailsOnce() {
   await markMigrationRan(KEY);
 }
 
+// Détails tirés du fil WhatsApp "J'arrive dès le vendredi", appliqués une seule fois.
+// Attribution Anaïs / Anne-Sophie d'après le repérage des contacts barrés
+// dans la capture WhatsApp. Céline, Sonia et Thana restent "Les deux"
+// (exception demandée). Aline confirmée par message -> Anne-Sophie.
+const GROUP_ANAIS = ["Arnaud Heinselin", "Bernadette Fongaufier", "Émilie", "Joanne Leroy", "Mathéo Bénéteau de Laprairie", "Nadège", "Papa", "Samuel Guyon", "Stéphanie Masini", "Valérie Heinselin"];
+const GROUP_ANNE_SOPHIE = ["Aline", "Eliane Menegain", "Jean Menegain", "Marie", "Nelly Guilbert", "Nicolas", "Pauline Grandmottet", "Raphaële Masure", "Alexis", "Aurélie Robin", "Charles C", "Clémence", "Corinne", "Delphine Pommier", "Elise", "Emilie", "Emy", "Estelle", "François", "Guillaume", "jacquenotjulien", "Jocelyne", "Laetitia Tremel", "Marie Gillard", "Marion", "Mathilde", "Mélissa", "Menegain", "Michel", "Nicole Prin", "Pierre", "Sainte-cluque", "Samuel Sugirtharaj", "Simon", "Steph", "Steven", "Sylvain", "Thibault", "Thomas", "Veronique", "+33 6 32 88 79 69", "+33 6 59 74 00 15", "+33 6 77 20 69 23", "+33 7 88 48 28 64"];
+async function assignGroupsOnce() {
+  const KEY = "assign-groups-v1";
+  if (await migrationRan(KEY)) return;
+  const all = await Store.getAllOnce("guests");
+  for (const g of all) {
+    if (GROUP_ANAIS.includes(g.name)) await Store.update("guests", g.id, { group: "Anaïs" });
+    else if (GROUP_ANNE_SOPHIE.includes(g.name)) await Store.update("guests", g.id, { group: "Anne-Sophie" });
+    // Céline Fieux, Sonia Millesse, Thana, Aline : non touchés.
+  }
+  await markMigrationRan(KEY);
+}
+
+async function applyConversationUpdate1Once() {
+  const KEY = "conv-update-1";
+  if (await migrationRan(KEY)) return;
+  const all = await Store.getAllOnce("guests");
+  const byName = (n) => all.find(g => g.name === n);
+
+  const melissa = byName("Mélissa");
+  if (melissa) {
+    await Store.update("guests", melissa.id, {
+      adults: 1,
+      notes: [melissa.notes, "Vient avec Julian (mêmes réponses : couchage samedi, sans agneau)"].filter(Boolean).join(" · ")
+    });
+  }
+
+  const aline = byName("Aline");
+  if (aline) {
+    await Store.update("guests", aline.id, {
+      adults: 1,
+      kids: 2,
+      notes: [aline.notes, "Vient avec Gilles et 2 enfants (mêmes réponses : couchage samedi, aime l'agneau)"].filter(Boolean).join(" · ")
+    });
+  }
+
+  const nelly = byName("Nelly Guilbert");
+  if (nelly) {
+    await Store.update("guests", nelly.id, { kids: 1 });
+  }
+
+  const steph = byName("Steph");
+  if (steph) {
+    await Store.update("guests", steph.id, { kids: 2, lodgingFriday: true });
+  }
+
+  const corinne = byName("Corinne");
+  if (corinne) {
+    await Store.update("guests", corinne.id, { kids: 3 });
+  }
+
+  await markMigrationRan(KEY);
+}
+
 async function applyFridayPollOnce() {
   const KEY = "friday-poll-v1";
   if (await migrationRan(KEY)) return;
@@ -496,6 +620,29 @@ function initCountdown() {
 }
 
 // ------------------------------------------------------------------
+// FORCER LA MISE À JOUR — équivalent de "Effacer et réinitialiser" dans
+// les paramètres du site, mais depuis un bouton dans l'appli : désinstalle
+// le service worker, vide son cache, puis recharge la page à neuf.
+// ------------------------------------------------------------------
+async function forceRefresh() {
+  const btn = document.getElementById("btn-force-refresh");
+  if (btn) btn.textContent = "⏳ Mise à jour en cours…";
+  try {
+    if ("serviceWorker" in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const reg of regs) await reg.unregister();
+    }
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      for (const k of keys) await caches.delete(k);
+    }
+  } catch (e) {
+    console.error("Erreur pendant le nettoyage du cache", e);
+  }
+  location.reload();
+}
+
+// ------------------------------------------------------------------
 // MODAL HELPER
 // ------------------------------------------------------------------
 function openModal(title, fieldsHtml, { onSave, onDelete, saveLabel = "Enregistrer" }) {
@@ -534,13 +681,12 @@ function openModal(title, fieldsHtml, { onSave, onDelete, saveLabel = "Enregistr
 }
 
 function tag(text, color) { return `<span class="tag tag-${color}">${text}</span>`; }
-const STATUS_COLOR = { "Confirmé": "green", "En attente": "yellow", "Décliné": "red", "À faire": "red", "En cours": "yellow", "Fait": "green", "Réservé": "blue", "Payé": "green" };
+const STATUS_COLOR = { "À faire": "red", "En cours": "yellow", "Fait": "green", "Réservé": "blue", "Payé": "green" };
 
 // ------------------------------------------------------------------
 // INVITÉS
 // ------------------------------------------------------------------
 let guestsData = [];
-let guestFilter = "Tous";
 let guestCheckFilters = new Set();
 
 const GUEST_CHECK_FILTERS = [
@@ -571,27 +717,17 @@ function initGuests() {
   document.getElementById("guests-search").addEventListener("input", renderGuests);
 }
 
-function renderGuestFilters() {
-  const wrap = document.getElementById("guests-filters");
-  const options = ["Tous", "Confirmé", "En attente", "Décliné"];
-  wrap.innerHTML = options.map(o => `<button class="chip ${o === guestFilter ? "active" : ""}" data-f="${o}">${o}</button>`).join("");
-  wrap.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { guestFilter = c.dataset.f; renderGuests(); }));
-}
-
 function renderGuests() {
-  renderGuestFilters();
   renderGuestCheckFilters();
   const q = (document.getElementById("guests-search").value || "").toLowerCase();
   const list = document.getElementById("guests-list");
   let items = guestsData.slice().sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-  if (guestFilter !== "Tous") items = items.filter(g => g.status === guestFilter);
   if (guestCheckFilters.size) items = items.filter(g => Array.from(guestCheckFilters).every(key => !!g[key]));
   if (q) items = items.filter(g => (g.name || "").toLowerCase().includes(q));
 
-  const confirmedGuests = guestsData.filter(g => g.status === "Confirmé");
-  const confirmedCount = confirmedGuests.reduce((sum, g) => sum + 1 + (g.adults || 0) + (g.kids || 0), 0);
-  const totalAdults = confirmedGuests.length + confirmedGuests.reduce((sum, g) => sum + (g.adults || 0), 0);
-  const totalKids = confirmedGuests.reduce((sum, g) => sum + (g.kids || 0), 0);
+  const confirmedCount = guestsData.reduce((sum, g) => sum + 1 + (g.adults || 0) + (g.kids || 0), 0);
+  const totalAdults = guestsData.length + guestsData.reduce((sum, g) => sum + (g.adults || 0), 0);
+  const totalKids = guestsData.reduce((sum, g) => sum + (g.kids || 0), 0);
   document.getElementById("stat-guests").textContent = confirmedCount;
   const breakdownEl = document.getElementById("stat-guests-breakdown");
   if (breakdownEl) {
@@ -617,7 +753,6 @@ function renderGuests() {
         <div class="list-item-title">${escapeHtml(g.name || "(sans nom)")}</div>
         <div class="list-item-sub">${g.group || ""}${g.phone ? ` · ${escapeHtml(g.phone)}` : ""}${g.adults ? ` · +${g.adults} adulte(s)` : ""}${g.kids ? ` · ${g.kids} enfant(s)` : ""}${g.room ? ` · Chambre ${escapeHtml(g.room)}` : ""}</div>
         <div class="list-item-tags">
-          ${tag(g.status || "En attente", STATUS_COLOR[g.status] || "gray")}
           ${lodgingTag(g)}
           ${g.team ? tag(g.team, "purple") : ""}
           ${g.noLambCount ? tag(`${g.noLambCount} sans agneau`, "orange") : ""}
@@ -644,17 +779,10 @@ function openGuestModal(guest) {
   const fields = `
     <div class="field"><label>Nom</label><input name="name" value="${guest ? escapeAttr(guest.name) : ""}" required></div>
     <div class="field"><label>Téléphone</label><input type="tel" name="phone" value="${guest ? escapeAttr(guest.phone) : ""}"></div>
-    <div class="field-row">
-      <div class="field"><label>Statut</label>
-        <select name="status">
-          ${["En attente", "Confirmé", "Décliné"].map(s => `<option ${(guest ? guest.status === s : s === "Confirmé") ? "selected" : ""}>${s}</option>`).join("")}
-        </select>
-      </div>
-      <div class="field"><label>Groupe</label>
-        <select name="group">
-          ${["Anaïs", "Anne-Sophie", "Les deux"].map(s => `<option ${guest && guest.group === s ? "selected" : ""}>${s}</option>`).join("")}
-        </select>
-      </div>
+    <div class="field"><label>Groupe</label>
+      <select name="group">
+        ${["Anaïs", "Anne-Sophie", "Les deux"].map(s => `<option ${guest && guest.group === s ? "selected" : ""}>${s}</option>`).join("")}
+      </select>
     </div>
     <div class="field-row">
       <div class="field"><label>Accompagnants adultes</label><input type="number" name="adults" min="0" value="${guest ? guest.adults || 0 : 0}"></div>
@@ -826,6 +954,12 @@ function renderTasks() {
   });
   list.querySelectorAll(".list-item").forEach(el => {
     el.querySelector(".edit-task").addEventListener("click", (e) => { e.stopPropagation(); openTaskModal(tasksData.find(t => t.id === el.dataset.id)); });
+    const remindBtn = el.querySelector(".add-reminder");
+    if (remindBtn) remindBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const t = tasksData.find(t => t.id === el.dataset.id);
+      window.open(calendarUrlFor(t), "_blank");
+    });
     el.querySelector(".toggle-task").addEventListener("click", (e) => {
       e.stopPropagation();
       const t = tasksData.find(t => t.id === el.dataset.id);
@@ -917,8 +1051,21 @@ function renderTaskRow(t) {
         <div class="list-item-tags">${tag(t.category || "Divers", "gray")}${tag(t.status || "À faire", STATUS_COLOR[t.status] || "gray")}</div>
         ${t.notes ? `<div class="list-item-sub" style="margin-top:3px;font-style:italic;">${escapeHtml(t.notes)}</div>` : ""}
       </div>
-      <div class="list-item-actions"><button class="icon-btn edit-task">✏️</button></div>
+      <div class="list-item-actions">
+        ${t.due ? `<button class="icon-btn add-reminder" data-id="${t.id}" title="Ajouter un rappel au calendrier">🔔</button>` : ""}
+        <button class="icon-btn edit-task">✏️</button>
+      </div>
     </div>`;
+}
+
+function calendarUrlFor(t) {
+  const start = t.due.replace(/-/g, "");
+  const endDate = new Date(t.due + "T00:00:00");
+  endDate.setDate(endDate.getDate() + 1);
+  const end = endDate.toISOString().slice(0, 10).replace(/-/g, "");
+  const text = encodeURIComponent(t.title);
+  const details = encodeURIComponent([t.category, t.owner, t.notes].filter(Boolean).join(" · "));
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${start}/${end}&details=${details}`;
 }
 
 function renderHomeTasks() {

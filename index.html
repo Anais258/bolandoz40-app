@@ -69,7 +69,6 @@
       <input type="search" id="guests-search" placeholder="Rechercher un invité…">
       <button class="btn-primary" id="btn-add-guest">+ Ajouter</button>
     </div>
-    <div class="filter-row" id="guests-filters"></div>
     <div class="filter-row" id="guests-check-filters"></div>
     <div id="guests-list" class="list"></div>
   </section>
@@ -87,8 +86,6 @@
     <div id="budget-list" class="list"></div>
   </section>
 
-  <!-- MATÉRIEL (fusionné dans "À faire") -->
-
   <!-- TÂCHES / À FAIRE (fusion tâches + matériel & courses) -->
   <section id="view-tasks" class="view">
     <div class="view-toolbar">
@@ -105,26 +102,16 @@
   <!-- PROGRAMME -->
   <section id="view-programme" class="view">
     <div class="card">
-      <h2>📅 Samedi 26 septembre</h2>
-      <table class="schedule-table">
-        <tr><td>11h00–13h30</td><td>Installation logistique (déco, tables, buffet)</td></tr>
-        <tr><td>14h00</td><td>Ouverture des portes, accueil, installation chambres/dortoirs</td></tr>
-        <tr><td>14h30–15h00</td><td>Constitution des 4 équipes, ateliers blason/chanson, briefing Olympiades</td></tr>
-        <tr><td>15h00–17h00</td><td>Olympiades — 4 épreuves x 15 min, 3 pôles (rotation)</td></tr>
-        <tr><td>16h00</td><td>Lancement de la cuisson du méchoui (prestataire)</td></tr>
-        <tr><td>17h00–17h30</td><td>Grand Final "Inter-Chambrées"</td></tr>
-        <tr><td>17h30–18h00</td><td>Résultats, remise des prix, détente</td></tr>
-        <tr><td>18h30</td><td>Apéritif officiel (parents) — Crémant, bières locales</td></tr>
-        <tr><td>20h30</td><td>Banquet — méchoui + accompagnements maison</td></tr>
-        <tr><td>22h00</td><td>Fromages & gâteau d'anniversaire</td></tr>
-        <tr><td>23h00…</td><td>Soirée dansante (DJ)</td></tr>
-      </table>
-      <h2>📅 Dimanche 27 septembre</h2>
-      <table class="schedule-table">
-        <tr><td>~9h30–11h30</td><td>Brunch</td></tr>
-        <tr><td>Fin de matinée</td><td>Rangement, ménage, restitution de la salle</td></tr>
-        <tr><td>Début d'après-midi</td><td>Départ de Bolandoz</td></tr>
-      </table>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <h2>📅 Samedi 26 septembre</h2>
+        <button class="icon-btn" id="btn-edit-prog-samedi">✏️</button>
+      </div>
+      <div id="programme-samedi-view" class="programme-text"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px;">
+        <h2>📅 Dimanche 27 septembre</h2>
+        <button class="icon-btn" id="btn-edit-prog-dimanche">✏️</button>
+      </div>
+      <div id="programme-dimanche-view" class="programme-text"></div>
     </div>
 
     <div class="card">
@@ -223,6 +210,7 @@
     <button class="sheet-item" data-view="programme">📅 Programme du week-end</button>
     <button class="sheet-item" data-view="menu">🍽️ Menu & Traiteur</button>
     <button class="sheet-item" data-view="notes">📝 Notes en vrac</button>
+    <button class="sheet-item" id="btn-force-refresh">🔄 Forcer la mise à jour de l'appli</button>
     <button class="sheet-item" id="btn-seed">🌱 Importer les données de départ</button>
     <button class="sheet-item" id="btn-close-sheet">Fermer</button>
   </div>

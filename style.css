@@ -48,7 +48,6 @@ html, body {
 .header-title { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; }
 .header-emoji { font-size: 28px; }
 .app-header h1 { margin: 4px 0 0; font-size: 14.5px; font-weight: 700; line-height: 1.3; display: flex; flex-direction: column; }
-.header-line1 { }
 .header-line2 { text-transform: uppercase; letter-spacing: .03em; }
 .countdown { margin: 4px 0 0; font-size: 12.5px; color: var(--sage-light); text-align: center; }
 
@@ -70,6 +69,7 @@ main#views {
   box-shadow: 0 1px 3px rgba(0,0,0,.06);
 }
 .card h2 { margin: 0 0 8px; font-size: 15.5px; color: var(--sage); }
+.programme-text { white-space: pre-line; font-size: 14px; line-height: 1.6; }
 .card p { margin: 0 0 8px; font-size: 14px; line-height: 1.5; }
 .card details { margin-top: 8px; border-top: 1px solid #eee; padding-top: 8px; }
 .card summary { font-weight: 600; font-size: 14px; color: var(--terracotta); cursor: pointer; }
@@ -232,7 +232,6 @@ main#views {
 }
 .checkbox-btn { font-size: 22px; border: none; background: none; padding: 0; line-height: 1; }
 
-.total-card { }
 .total-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14.5px; }
 .total-row:not(:last-child) { border-bottom: 1px solid #f0ece2; }
 
