@@ -311,6 +311,20 @@ main#views {
 }
 .field-row { display: flex; gap: 10px; }
 .field-row .field { flex: 1; }
+
+.counter-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; border-top: 1px solid var(--sage-light);
+}
+.counter-label { font-size: 13.5px; }
+.counter-control { display: flex; align-items: center; gap: 10px; }
+.counter-btn {
+  width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--sage);
+  background: var(--card-bg); color: var(--sage); font-size: 16px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1;
+}
+.counter-btn:active { background: var(--sage); color: #fff; }
+.counter-value { min-width: 20px; text-align: center; font-weight: 700; font-size: 14.5px; }
 .modal-actions { display: flex; gap: 10px; margin-top: 6px; }
 .btn-secondary {
   flex: 1;

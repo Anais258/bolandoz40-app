@@ -133,6 +133,8 @@ async function boot() {
     await migrateGuestFieldsOnce();
     await applyMealPollOnce();
     await fixMeatLambOverlapOnce();
+    await convertMealBooleansToCountsOnce();
+    await applySamuelHouseholdDetailsOnce();
     await applyFridayPollOnce();
     await applySaturdayPollOnce();
   } catch (e) {
@@ -385,6 +387,44 @@ async function fixMeatLambOverlapOnce() {
   await markMigrationRan(KEY);
 }
 
+// Passage des cases "Sans agneau/Sans viande" (oui/non pour toute la fiche)
+// à un nombre de personnes concernées dans le foyer — une fiche peut
+// représenter plusieurs personnes (accompagnants), qui n'ont pas
+// forcément toutes la même restriction.
+async function convertMealBooleansToCountsOnce() {
+  const KEY = "meal-counts-v1";
+  if (await migrationRan(KEY)) return;
+  const all = await Store.getAllOnce("guests");
+  for (const g of all) {
+    if (g.noLambCount === undefined || g.noMeatCount === undefined) {
+      await Store.update("guests", g.id, {
+        noLambCount: g.noLambCount !== undefined ? g.noLambCount : (g.noLamb ? 1 : 0),
+        noMeatCount: g.noMeatCount !== undefined ? g.noMeatCount : (g.noMeat ? 1 : 0)
+      });
+    }
+  }
+  await markMigrationRan(KEY);
+}
+
+// Détails donnés par Samuel Sugirtharaj par message : vient avec sa
+// compagne (qui ne mange pas d'agneau) et sa fille, arrivée le samedi.
+async function applySamuelHouseholdDetailsOnce() {
+  const KEY = "samuel-household-v1";
+  if (await migrationRan(KEY)) return;
+  const all = await Store.getAllOnce("guests");
+  const samuel = all.find(g => g.name === "Samuel Sugirtharaj");
+  if (samuel) {
+    await Store.update("guests", samuel.id, {
+      adults: 1,
+      kids: 1,
+      lodgingSaturday: true,
+      noLambCount: 1,
+      notes: [samuel.notes, "Vient avec sa compagne et sa fille"].filter(Boolean).join(" · ")
+    });
+  }
+  await markMigrationRan(KEY);
+}
+
 async function applyFridayPollOnce() {
   const KEY = "friday-poll-v1";
   if (await migrationRan(KEY)) return;
@@ -506,8 +546,8 @@ let guestCheckFilters = new Set();
 const GUEST_CHECK_FILTERS = [
   { key: "lodgingFriday", label: "Couchage vendredi" },
   { key: "lodgingSaturday", label: "Couchage samedi" },
-  { key: "noLamb", label: "Sans agneau" },
-  { key: "noMeat", label: "Sans viande" },
+  { key: "noLambCount", label: "Sans agneau" },
+  { key: "noMeatCount", label: "Sans viande" },
   { key: "reminderSent", label: "Rappel envoyé" }
 ];
 
@@ -550,7 +590,7 @@ function renderGuests() {
 
   const confirmedGuests = guestsData.filter(g => g.status === "Confirmé");
   const confirmedCount = confirmedGuests.reduce((sum, g) => sum + 1 + (g.adults || 0) + (g.kids || 0), 0);
-  const totalAdults = confirmedGuests.reduce((sum, g) => sum + (g.adults || 0), 0);
+  const totalAdults = confirmedGuests.length + confirmedGuests.reduce((sum, g) => sum + (g.adults || 0), 0);
   const totalKids = confirmedGuests.reduce((sum, g) => sum + (g.kids || 0), 0);
   document.getElementById("stat-guests").textContent = confirmedCount;
   const breakdownEl = document.getElementById("stat-guests-breakdown");
@@ -580,8 +620,8 @@ function renderGuests() {
           ${tag(g.status || "En attente", STATUS_COLOR[g.status] || "gray")}
           ${lodgingTag(g)}
           ${g.team ? tag(g.team, "purple") : ""}
-          ${g.noLamb ? tag("Sans agneau", "orange") : ""}
-          ${g.noMeat ? tag("Sans viande", "orange") : ""}
+          ${g.noLambCount ? tag(`${g.noLambCount} sans agneau`, "orange") : ""}
+          ${g.noMeatCount ? tag(`${g.noMeatCount} sans viande`, "orange") : ""}
         </div>
       </div>
       <div class="list-item-actions">
@@ -634,10 +674,24 @@ function openGuestModal(guest) {
       </div>
     </div>
     <div class="field">
-      <label>Repas</label>
-      <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
-        <label style="display:flex;align-items:center;gap:6px;font-weight:400;"><input type="checkbox" name="noLamb" style="width:auto;" ${guest && guest.noLamb ? "checked" : ""}> Ne mange pas d'agneau</label>
-        <label style="display:flex;align-items:center;gap:6px;font-weight:400;"><input type="checkbox" name="noMeat" style="width:auto;" ${guest && guest.noMeat ? "checked" : ""}> Ne mange pas de viande</label>
+      <label>Repas <span style="font-weight:400;color:var(--muted);">(nombre de personnes du foyer concernées)</span></label>
+      <div class="counter-row">
+        <span class="counter-label">Ne mangent pas d'agneau</span>
+        <div class="counter-control">
+          <button type="button" class="counter-btn counter-minus">−</button>
+          <span class="counter-value">${guest ? guest.noLambCount || 0 : 0}</span>
+          <button type="button" class="counter-btn counter-plus">+</button>
+          <input type="number" name="noLambCount" value="${guest ? guest.noLambCount || 0 : 0}" style="display:none;">
+        </div>
+      </div>
+      <div class="counter-row">
+        <span class="counter-label">Ne mangent pas de viande</span>
+        <div class="counter-control">
+          <button type="button" class="counter-btn counter-minus">−</button>
+          <span class="counter-value">${guest ? guest.noMeatCount || 0 : 0}</span>
+          <button type="button" class="counter-btn counter-plus">+</button>
+          <input type="number" name="noMeatCount" value="${guest ? guest.noMeatCount || 0 : 0}" style="display:none;">
+        </div>
       </div>
     </div>
     <div class="field"><label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" name="reminderSent" style="width:auto;" ${guest && guest.reminderSent ? "checked" : ""}> Rappel draps + tenue envoyé</label></div>
@@ -650,6 +704,22 @@ function openGuestModal(guest) {
       else await Store.add("guests", data);
     },
     onDelete: guest ? async () => Store.remove("guests", guest.id) : null
+  });
+  initCounterControls();
+}
+
+function initCounterControls() {
+  document.querySelectorAll("#modal-form .counter-control").forEach(ctrl => {
+    const hidden = ctrl.querySelector('input[type="number"]');
+    const valueEl = ctrl.querySelector(".counter-value");
+    ctrl.querySelector(".counter-minus").addEventListener("click", () => {
+      hidden.value = Math.max(0, Number(hidden.value) - 1);
+      valueEl.textContent = hidden.value;
+    });
+    ctrl.querySelector(".counter-plus").addEventListener("click", () => {
+      hidden.value = Number(hidden.value) + 1;
+      valueEl.textContent = hidden.value;
+    });
   });
 }
 
