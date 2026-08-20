@@ -170,6 +170,55 @@ main#views {
 .tag-orange { background: #F6E4D3; color: var(--terracotta); }
 
 .list-item-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+
+.group-toggle {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.group-toggle button {
+  flex: 1;
+  border: 1px solid var(--sage-light);
+  background: var(--card-bg);
+  color: var(--sage);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 999px;
+}
+.group-toggle button.active {
+  background: var(--sage);
+  color: #fff;
+  border-color: var(--sage);
+}
+.task-group { margin-bottom: 14px; }
+.task-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 2px 8px;
+  cursor: pointer;
+}
+.task-group-head h3 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--sage);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+.task-group-count { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.task-group-chev {
+  width: 8px; height: 8px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  transition: transform .2s ease;
+  margin-left: 8px;
+}
+.task-group.collapsed .task-group-chev { transform: rotate(-45deg); }
+.task-group.collapsed .list { display: none; }
 .icon-btn {
   border: none;
   background: none;

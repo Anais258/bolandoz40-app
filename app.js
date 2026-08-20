@@ -419,21 +419,112 @@ const TODO_CATEGORIES = ["Lieu", "Menu", "Boissons", "Déco", "Cuisine/Buffet", 
 const TODO_STATUSES = ["À faire", "Réservé", "Fait"];
 const TODO_STATUS_ICON = { "À faire": "⬜️", "Réservé": "🟡", "Fait": "✅" };
 let tasksData = [];
+let taskGroupMode = localStorage.getItem("bolandoz40_taskGroupMode") || "due";
+let collapsedTaskGroups = new Set();
+
 function initTasks() {
   Store.subscribe("todos", (arr) => { tasksData = arr; renderTasks(); renderHomeTasks(); });
   document.getElementById("btn-add-task").addEventListener("click", () => openTaskModal(null));
+  document.getElementById("task-group-toggle").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-mode]");
+    if (!btn) return;
+    taskGroupMode = btn.dataset.mode;
+    localStorage.setItem("bolandoz40_taskGroupMode", taskGroupMode);
+    document.querySelectorAll("#task-group-toggle button").forEach(b => b.classList.toggle("active", b === btn));
+    collapsedTaskGroups.clear();
+    renderTasks();
+  });
 }
 
 function renderTasks() {
   const list = document.getElementById("tasks-list");
-  const items = tasksData.slice().sort((a, b) => {
-    if ((a.status === "Fait") !== (b.status === "Fait")) return a.status === "Fait" ? 1 : -1;
-    return (a.due || "9999").localeCompare(b.due || "9999");
-  });
   const remaining = tasksData.filter(t => t.status !== "Fait").length;
   document.getElementById("stat-tasks").textContent = remaining;
-  if (!items.length) { list.innerHTML = `<div class="empty-state">Rien pour l'instant. Importez les données de départ depuis "Plus".</div>`; return; }
-  list.innerHTML = items.map(t => `
+
+  // sync toggle buttons in case render is called after a data change (not a mode change)
+  document.querySelectorAll("#task-group-toggle button").forEach(b => b.classList.toggle("active", b.dataset.mode === taskGroupMode));
+
+  if (!tasksData.length) { list.innerHTML = `<div class="empty-state">Rien pour l'instant. Importez les données de départ depuis "Plus".</div>`; return; }
+
+  const groups = groupTasks(tasksData, taskGroupMode);
+  list.innerHTML = groups.map(g => renderTaskGroup(g)).join("");
+
+  list.querySelectorAll(".task-group-head").forEach(head => {
+    head.addEventListener("click", () => {
+      const key = head.closest(".task-group").dataset.key;
+      if (collapsedTaskGroups.has(key)) collapsedTaskGroups.delete(key); else collapsedTaskGroups.add(key);
+      renderTasks();
+    });
+  });
+  list.querySelectorAll(".list-item").forEach(el => {
+    el.querySelector(".edit-task").addEventListener("click", (e) => { e.stopPropagation(); openTaskModal(tasksData.find(t => t.id === el.dataset.id)); });
+    el.querySelector(".toggle-task").addEventListener("click", (e) => {
+      e.stopPropagation();
+      const t = tasksData.find(t => t.id === el.dataset.id);
+      const next = TODO_STATUSES[(TODO_STATUSES.indexOf(t.status) + 1) % TODO_STATUSES.length];
+      Store.update("todos", t.id, { status: next });
+    });
+  });
+}
+
+function groupTasks(items, mode) {
+  const sorted = items.slice().sort((a, b) => {
+    if ((a.status === "Fait") !== (b.status === "Fait")) return a.status === "Fait" ? 1 : -1;
+    const dueCmp = (a.due || "9999").localeCompare(b.due || "9999");
+    if (dueCmp !== 0) return dueCmp;
+    return (a.title || "").localeCompare(b.title || "");
+  });
+
+  const buckets = new Map();
+  if (mode === "category") {
+    TODO_CATEGORIES.forEach(c => buckets.set(c, []));
+    sorted.forEach(t => {
+      const cat = TODO_CATEGORIES.includes(t.category) ? t.category : "Divers";
+      buckets.get(cat).push(t);
+    });
+  } else {
+    sorted.forEach(t => {
+      const key = t.due || "__nodue__";
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key).push(t);
+    });
+  }
+
+  let entries = Array.from(buckets.entries()).filter(([, items]) => items.length);
+  if (mode === "due") {
+    entries.sort(([a], [b]) => {
+      if (a === "__nodue__") return 1;
+      if (b === "__nodue__") return -1;
+      return a.localeCompare(b);
+    });
+  }
+  return entries.map(([key, items]) => ({
+    key,
+    label: mode === "category" ? key : (key === "__nodue__" ? "Sans échéance" : formatDate(key)),
+    items
+  }));
+}
+
+function renderTaskGroup(g) {
+  const collapsed = collapsedTaskGroups.has(g.key);
+  const doneCount = g.items.filter(t => t.status === "Fait").length;
+  return `
+    <div class="task-group${collapsed ? " collapsed" : ""}" data-key="${escapeAttr(g.key)}">
+      <div class="task-group-head">
+        <h3>${escapeHtml(g.label)}</h3>
+        <div style="display:flex;align-items:center;">
+          <span class="task-group-count">${doneCount}/${g.items.length}</span>
+          <span class="task-group-chev"></span>
+        </div>
+      </div>
+      <div class="list">
+        ${g.items.map(t => renderTaskRow(t)).join("")}
+      </div>
+    </div>`;
+}
+
+function renderTaskRow(t) {
+  return `
     <div class="list-item" data-id="${t.id}" style="${t.status === "Fait" ? "opacity:.55;" : ""}">
       <button class="checkbox-btn toggle-task">${TODO_STATUS_ICON[t.status] || "⬜️"}</button>
       <div class="list-item-main">
@@ -443,15 +534,7 @@ function renderTasks() {
         ${t.notes ? `<div class="list-item-sub" style="margin-top:3px;font-style:italic;">${escapeHtml(t.notes)}</div>` : ""}
       </div>
       <div class="list-item-actions"><button class="icon-btn edit-task">✏️</button></div>
-    </div>`).join("");
-  list.querySelectorAll(".list-item").forEach(el => {
-    el.querySelector(".edit-task").addEventListener("click", () => openTaskModal(tasksData.find(t => t.id === el.dataset.id)));
-    el.querySelector(".toggle-task").addEventListener("click", () => {
-      const t = tasksData.find(t => t.id === el.dataset.id);
-      const next = TODO_STATUSES[(TODO_STATUSES.indexOf(t.status) + 1) % TODO_STATUSES.length];
-      Store.update("todos", t.id, { status: next });
-    });
-  });
+    </div>`;
 }
 
 function renderHomeTasks() {
