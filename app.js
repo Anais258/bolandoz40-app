@@ -126,16 +126,18 @@ async function boot() {
   } else {
     document.getElementById("config-banner").classList.remove("hidden");
   }
-  await migrateOrSeedTodos();
-  await renameOldCategories();
-  await migrateOrSeedGuests();
-  await migrateGuestFieldsOnce();
-  await applyMealPollOnce();
-  await fixMeatLambOverlapOnce();
-  await applyFridayPollOnce();
-  await applySaturdayPollOnce();
-  await applySaturdayPollOnce();
-  await applySaturdayPollOnce();
+  try {
+    await migrateOrSeedTodos();
+    await renameOldCategories();
+    await migrateOrSeedGuests();
+    await migrateGuestFieldsOnce();
+    await applyMealPollOnce();
+    await fixMeatLambOverlapOnce();
+    await applyFridayPollOnce();
+    await applySaturdayPollOnce();
+  } catch (e) {
+    console.error("Erreur pendant la mise à jour des données (l'appli continue quand même)", e);
+  }
   initNav();
   initCountdown();
   initGuests();
@@ -409,34 +411,6 @@ async function applySaturdayPollOnce() {
   await markMigrationRan(KEY);
 }
 
-// Sondage WhatsApp "dort le samedi ?" — réponses "Oui", appliqué une seule fois.
-const SATURDAY_POLL_YES = ["Sonia Millesse", "Nicolas", "Marie", "Aline", "Samuel Guyon", "Nadège", "Mélissa", "Emy", "Laetitia Tremel", "Nelly Guilbert", "Estelle", "jacquenotjulien", "François", "Emilie", "Jean Menegain", "Aurélie Robin", "Marie Gillard", "Raphaële Masure", "Thibault", "Samuel Sugirtharaj", "Steven", "Delphine Pommier"];
-async function applySaturdayPollOnce() {
-  const KEY = "saturday-poll-v1";
-  if (await migrationRan(KEY)) return;
-  const all = await Store.getAllOnce("guests");
-  for (const g of all) {
-    if (SATURDAY_POLL_YES.includes(g.name) && !g.lodgingSaturday) {
-      await Store.update("guests", g.id, { lodgingSaturday: true });
-    }
-  }
-  await markMigrationRan(KEY);
-}
-
-// Sondage WhatsApp "dort le samedi ?" — réponses "Oui", appliqué une seule fois.
-const SATURDAY_POLL_YES = ["Sonia Millesse", "Nicolas", "Marie", "Aline", "Samuel Guyon", "Nadège", "Mélissa", "Emy", "Laetitia Tremel", "Nelly Guilbert", "Estelle", "jacquenotjulien", "François", "Emilie", "Jean Menegain", "Aurélie Robin", "Marie Gillard", "Raphaële Masure", "Thibault", "Samuel Sugirtharaj", "Steven", "Delphine Pommier"];
-async function applySaturdayPollOnce() {
-  const KEY = "saturday-poll-v1";
-  if (await migrationRan(KEY)) return;
-  const all = await Store.getAllOnce("guests");
-  for (const g of all) {
-    if (SATURDAY_POLL_YES.includes(g.name) && !g.lodgingSaturday) {
-      await Store.update("guests", g.id, { lodgingSaturday: true });
-    }
-  }
-  await markMigrationRan(KEY);
-}
-
 // ------------------------------------------------------------------
 // NAVIGATION
 // ------------------------------------------------------------------
@@ -574,9 +548,17 @@ function renderGuests() {
   if (guestCheckFilters.size) items = items.filter(g => Array.from(guestCheckFilters).every(key => !!g[key]));
   if (q) items = items.filter(g => (g.name || "").toLowerCase().includes(q));
 
-  const confirmedCount = guestsData.filter(g => g.status === "Confirmé")
-    .reduce((sum, g) => sum + 1 + (g.adults || 0) + (g.kids || 0), 0);
+  const confirmedGuests = guestsData.filter(g => g.status === "Confirmé");
+  const confirmedCount = confirmedGuests.reduce((sum, g) => sum + 1 + (g.adults || 0) + (g.kids || 0), 0);
+  const totalAdults = confirmedGuests.reduce((sum, g) => sum + (g.adults || 0), 0);
+  const totalKids = confirmedGuests.reduce((sum, g) => sum + (g.kids || 0), 0);
   document.getElementById("stat-guests").textContent = confirmedCount;
+  const breakdownEl = document.getElementById("stat-guests-breakdown");
+  if (breakdownEl) {
+    breakdownEl.textContent = (totalAdults || totalKids)
+      ? `dont ${totalAdults} adulte${totalAdults === 1 ? "" : "s"} et ${totalKids} enfant${totalKids === 1 ? "" : "s"}`
+      : "";
+  }
 
   const countLine = guestCheckFilters.size
     ? `<div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;">${items.length} invité${items.length === 1 ? "" : "s"} correspondant${items.length === 1 ? "" : "s"}</div>`
