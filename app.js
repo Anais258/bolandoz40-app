@@ -139,6 +139,7 @@ async function boot() {
     await applySaturdayPollOnce();
     await applyConversationUpdate1Once();
     await assignGroupsOnce();
+    await convertLodgingBooleansToCountsOnce();
     await seedOrConvertProgrammeOnce();
   } catch (e) {
     console.error("Erreur pendant la mise à jour des données (l'appli continue quand même)", e);
@@ -183,63 +184,63 @@ function supplyToTodo(s) {
   };
 }
 const guestsSeed = [
-  { name: "Aline", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Arnaud Heinselin", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Bernadette Fongaufier", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Voisine · Couchage samedi" },
-  { name: "Céline Fieux", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Eliane Menegain", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Maman d'Anne-Sophie" },
-  { name: "Émilie", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Jean Menegain", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
-  { name: "Joanne Leroy", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Marie", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Copine d'Anne-Sophie · Couchage samedi" },
-  { name: "Mathéo Bénéteau de Laprairie", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Nadège", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Copine de Samuel" },
-  { name: "Nelly Guilbert", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Cras'Tier" },
-  { name: "Nicolas", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Papa de Marius" },
-  { name: "Papa", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Pauline Grandmottet", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Copine d'Anne-Sophie · Couchage samedi" },
-  { name: "Raphaële Masure", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Copine d'Anne-Sophie · Couchage vendredi et samedi" },
-  { name: "Samuel Guyon", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Sonia Millesse", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Stéphanie Masini", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Thana", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Maman de Jade, copine de Lola" },
-  { name: "Valérie Heinselin", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Alexis", phone: "+33 6 65 91 07 00", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Aurélie Robin", phone: "+33 6 89 12 35 56", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
-  { name: "Charles C", phone: "+33 7 86 14 84 32", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
-  { name: "Clémence", phone: "+33 6 37 21 53 18", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Corinne", phone: "+33 6 74 76 64 56", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Delphine Pommier", phone: "+49 177 4308415", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage vendredi et samedi" },
-  { name: "Elise", phone: "+33 6 72 16 72 67", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
-  { name: "Emilie", phone: "+33 6 68 23 16 59", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage vendredi et samedi" },
-  { name: "Emy", phone: "+33 7 70 70 46 44", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
-  { name: "Estelle", phone: "+33 7 69 33 90 41", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
-  { name: "François", phone: "+33 6 78 82 45 72", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
-  { name: "Guillaume", phone: "+33 6 30 05 60 24", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "jacquenotjulien", phone: "+33 6 30 60 07 44", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Jocelyne", phone: "+33 6 37 45 09 89", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Laetitia Tremel", phone: "+33 6 51 00 66 50", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage vendredi" },
-  { name: "Marie Gillard", phone: "+33 6 85 34 90 94", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
-  { name: "Marion", phone: "+33 6 72 73 00 28", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Mathilde", phone: "+33 7 69 28 69 17", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Mélissa", phone: "+33 6 06 80 26 22", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
-  { name: "Menegain", phone: "+33 6 43 07 51 37", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Michel", phone: "+33 6 88 45 40 44", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Nicole Prin", phone: "+33 6 58 00 58 42", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Pierre", phone: "+33 6 52 69 16 04", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Sainte-cluque", phone: "+33 6 35 80 76 11", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Samuel Sugirtharaj", phone: "+33 6 99 57 70 44", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
-  { name: "Simon", phone: "+33 6 29 40 76 51", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Steph", phone: "+33 6 35 59 71 97", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage vendredi et samedi" },
-  { name: "Steven", phone: "+33 6 43 54 17 32", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage vendredi et samedi" },
-  { name: "Sylvain", phone: "+33 6 31 89 94 82", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Thibault", phone: "+33 7 69 98 28 99", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Couchage samedi" },
-  { name: "Thomas", phone: "+33 6 77 43 10 94", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "Veronique", phone: "+33 6 80 54 19 64", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "" },
-  { name: "+33 6 32 88 79 69", phone: "+33 6 32 88 79 69", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Nom à identifier" },
-  { name: "+33 6 59 74 00 15", phone: "+33 6 59 74 00 15", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Nom à identifier" },
-  { name: "+33 6 77 20 69 23", phone: "+33 6 77 20 69 23", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Nom à identifier" },
-  { name: "+33 7 88 48 28 64", phone: "+33 7 88 48 28 64", group: "Les deux", adults: 0, kids: 0, room: "", team: "", reminderSent: false, notes: "Nom à identifier" },
+  { name: "Aline", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Arnaud Heinselin", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Bernadette Fongaufier", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Voisine · Couchage samedi" },
+  { name: "Céline Fieux", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Eliane Menegain", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Maman d'Anne-Sophie" },
+  { name: "Émilie", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Jean Menegain", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Couchage samedi" },
+  { name: "Joanne Leroy", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Marie", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Copine d'Anne-Sophie · Couchage samedi" },
+  { name: "Mathéo Bénéteau de Laprairie", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Nadège", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Copine de Samuel" },
+  { name: "Nelly Guilbert", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Cras'Tier" },
+  { name: "Nicolas", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Papa de Marius" },
+  { name: "Papa", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Pauline Grandmottet", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Copine d'Anne-Sophie · Couchage samedi" },
+  { name: "Raphaële Masure", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Copine d'Anne-Sophie · Couchage vendredi et samedi" },
+  { name: "Samuel Guyon", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Sonia Millesse", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Stéphanie Masini", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Thana", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Maman de Jade, copine de Lola" },
+  { name: "Valérie Heinselin", phone: "", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Alexis", phone: "+33 6 65 91 07 00", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Aurélie Robin", phone: "+33 6 89 12 35 56", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Couchage samedi" },
+  { name: "Charles C", phone: "+33 7 86 14 84 32", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Couchage samedi" },
+  { name: "Clémence", phone: "+33 6 37 21 53 18", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Corinne", phone: "+33 6 74 76 64 56", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Delphine Pommier", phone: "+49 177 4308415", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Couchage vendredi et samedi" },
+  { name: "Elise", phone: "+33 6 72 16 72 67", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Couchage samedi" },
+  { name: "Emilie", phone: "+33 6 68 23 16 59", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Couchage vendredi et samedi" },
+  { name: "Emy", phone: "+33 7 70 70 46 44", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Couchage samedi" },
+  { name: "Estelle", phone: "+33 7 69 33 90 41", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Couchage samedi" },
+  { name: "François", phone: "+33 6 78 82 45 72", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Couchage samedi" },
+  { name: "Guillaume", phone: "+33 6 30 05 60 24", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "jacquenotjulien", phone: "+33 6 30 60 07 44", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Jocelyne", phone: "+33 6 37 45 09 89", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Laetitia Tremel", phone: "+33 6 51 00 66 50", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Couchage vendredi" },
+  { name: "Marie Gillard", phone: "+33 6 85 34 90 94", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Couchage samedi" },
+  { name: "Marion", phone: "+33 6 72 73 00 28", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Mathilde", phone: "+33 7 69 28 69 17", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Mélissa", phone: "+33 6 06 80 26 22", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Couchage samedi" },
+  { name: "Menegain", phone: "+33 6 43 07 51 37", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Michel", phone: "+33 6 88 45 40 44", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Nicole Prin", phone: "+33 6 58 00 58 42", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Pierre", phone: "+33 6 52 69 16 04", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Sainte-cluque", phone: "+33 6 35 80 76 11", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Samuel Sugirtharaj", phone: "+33 6 99 57 70 44", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Couchage samedi" },
+  { name: "Simon", phone: "+33 6 29 40 76 51", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Steph", phone: "+33 6 35 59 71 97", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Couchage vendredi et samedi" },
+  { name: "Steven", phone: "+33 6 43 54 17 32", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Couchage vendredi et samedi" },
+  { name: "Sylvain", phone: "+33 6 31 89 94 82", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Thibault", phone: "+33 7 69 98 28 99", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Couchage samedi" },
+  { name: "Thomas", phone: "+33 6 77 43 10 94", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "Veronique", phone: "+33 6 80 54 19 64", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "" },
+  { name: "+33 6 32 88 79 69", phone: "+33 6 32 88 79 69", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Nom à identifier" },
+  { name: "+33 6 59 74 00 15", phone: "+33 6 59 74 00 15", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Nom à identifier" },
+  { name: "+33 6 77 20 69 23", phone: "+33 6 77 20 69 23", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Nom à identifier" },
+  { name: "+33 7 88 48 28 64", phone: "+33 7 88 48 28 64", group: "Les deux", adults: 0, kids: 0, room: "", team: "", notes: "Nom à identifier" },
 ];
 
 async function migrationRan(key) {
@@ -506,6 +507,26 @@ async function convertMealBooleansToCountsOnce() {
   await markMigrationRan(KEY);
 }
 
+// Passage des cases "Couchage vendredi/samedi" (oui/non pour toute la
+// fiche) à un nombre de personnes du foyer concernées — par défaut,
+// on reporte tout le foyer (1 + accompagnants + enfants) sur la nuit
+// cochée ; à ajuster à la main si une partie du foyer seulement reste.
+async function convertLodgingBooleansToCountsOnce() {
+  const KEY = "lodging-counts-v1";
+  if (await migrationRan(KEY)) return;
+  const all = await Store.getAllOnce("guests");
+  for (const g of all) {
+    if (g.lodgingFridayCount === undefined || g.lodgingSaturdayCount === undefined) {
+      const householdSize = 1 + (g.adults || 0) + (g.kids || 0);
+      await Store.update("guests", g.id, {
+        lodgingFridayCount: g.lodgingFridayCount !== undefined ? g.lodgingFridayCount : (g.lodgingFriday ? householdSize : 0),
+        lodgingSaturdayCount: g.lodgingSaturdayCount !== undefined ? g.lodgingSaturdayCount : (g.lodgingSaturday ? householdSize : 0)
+      });
+    }
+  }
+  await markMigrationRan(KEY);
+}
+
 // Détails donnés par Samuel Sugirtharaj par message : vient avec sa
 // compagne (qui ne mange pas d'agneau) et sa fille, arrivée le samedi.
 async function applySamuelHouseholdDetailsOnce() {
@@ -725,11 +746,10 @@ let guestsData = [];
 let guestCheckFilters = new Set();
 
 const GUEST_CHECK_FILTERS = [
-  { key: "lodgingFriday", label: "Couchage vendredi" },
-  { key: "lodgingSaturday", label: "Couchage samedi" },
+  { key: "lodgingFridayCount", label: "Couchage vendredi" },
+  { key: "lodgingSaturdayCount", label: "Couchage samedi" },
   { key: "noLambCount", label: "Sans agneau" },
-  { key: "noMeatCount", label: "Sans viande" },
-  { key: "reminderSent", label: "Rappel envoyé" }
+  { key: "noMeatCount", label: "Sans viande" }
 ];
 
 function renderGuestCheckFilters() {
@@ -788,7 +808,8 @@ function renderGuests() {
         <div class="list-item-title">${escapeHtml(g.name || "(sans nom)")}</div>
         <div class="list-item-sub">${g.group || ""}${g.phone ? ` · ${escapeHtml(g.phone)}` : ""}${g.adults ? ` · +${g.adults} adulte(s)` : ""}${g.kids ? ` · ${g.kids} enfant(s)` : ""}${g.room ? ` · Chambre ${escapeHtml(g.room)}` : ""}</div>
         <div class="list-item-tags">
-          ${lodgingTag(g)}
+          ${g.lodgingFridayCount ? tag(`${g.lodgingFridayCount} couchage vendredi`, "blue") : ""}
+          ${g.lodgingSaturdayCount ? tag(`${g.lodgingSaturdayCount} couchage samedi`, "blue") : ""}
           ${g.team ? tag(g.team, "purple") : ""}
           ${g.noLambCount ? tag(`${g.noLambCount} sans agneau`, "orange") : ""}
           ${g.noMeatCount ? tag(`${g.noMeatCount} sans viande`, "orange") : ""}
@@ -803,16 +824,9 @@ function renderGuests() {
   });
 }
 
-function lodgingTag(g) {
-  if (g.lodgingFriday && g.lodgingSaturday) return tag("Couchage ven. + sam.", "blue");
-  if (g.lodgingFriday) return tag("Couchage vendredi", "blue");
-  if (g.lodgingSaturday) return tag("Couchage samedi", "blue");
-  return "";
-}
-
 function openGuestModal(guest) {
   const fields = `
-    <div class="field"><label>Nom</label><input name="name" value="${guest ? escapeAttr(guest.name) : ""}" required></div>
+    <div class="field"><label class="field-label-accent">Nom</label><input name="name" value="${guest ? escapeAttr(guest.name) : ""}" required></div>
     <div class="field"><label>Téléphone</label><input type="tel" name="phone" value="${guest ? escapeAttr(guest.phone) : ""}"></div>
     <div class="field"><label>Groupe</label>
       <select name="group">
@@ -830,14 +844,28 @@ function openGuestModal(guest) {
       </div>
     </div>
     <div class="field">
-      <label>Couchage à la Colo</label>
-      <div style="display:flex;gap:16px;margin-top:4px;">
-        <label style="display:flex;align-items:center;gap:6px;font-weight:400;"><input type="checkbox" name="lodgingFriday" style="width:auto;" ${guest && guest.lodgingFriday ? "checked" : ""}> Vendredi</label>
-        <label style="display:flex;align-items:center;gap:6px;font-weight:400;"><input type="checkbox" name="lodgingSaturday" style="width:auto;" ${guest && guest.lodgingSaturday ? "checked" : ""}> Samedi</label>
+      <label class="field-label-accent">Couchage à la Colo <span style="font-weight:400;color:var(--muted);font-size:12px;">(nombre de personnes du foyer concernées)</span></label>
+      <div class="counter-row">
+        <span class="counter-label">Vendredi</span>
+        <div class="counter-control">
+          <button type="button" class="counter-btn counter-minus">−</button>
+          <span class="counter-value">${guest ? guest.lodgingFridayCount || 0 : 0}</span>
+          <button type="button" class="counter-btn counter-plus">+</button>
+          <input type="number" name="lodgingFridayCount" value="${guest ? guest.lodgingFridayCount || 0 : 0}" style="display:none;">
+        </div>
+      </div>
+      <div class="counter-row">
+        <span class="counter-label">Samedi</span>
+        <div class="counter-control">
+          <button type="button" class="counter-btn counter-minus">−</button>
+          <span class="counter-value">${guest ? guest.lodgingSaturdayCount || 0 : 0}</span>
+          <button type="button" class="counter-btn counter-plus">+</button>
+          <input type="number" name="lodgingSaturdayCount" value="${guest ? guest.lodgingSaturdayCount || 0 : 0}" style="display:none;">
+        </div>
       </div>
     </div>
     <div class="field">
-      <label>Repas <span style="font-weight:400;color:var(--muted);">(nombre de personnes du foyer concernées)</span></label>
+      <label class="field-label-accent">Repas <span style="font-weight:400;color:var(--muted);font-size:12px;">(nombre de personnes du foyer concernées)</span></label>
       <div class="counter-row">
         <span class="counter-label">Ne mangent pas d'agneau</span>
         <div class="counter-control">
@@ -857,7 +885,6 @@ function openGuestModal(guest) {
         </div>
       </div>
     </div>
-    <div class="field"><label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" name="reminderSent" style="width:auto;" ${guest && guest.reminderSent ? "checked" : ""}> Rappel draps + tenue envoyé</label></div>
     <div class="field"><label>Notes</label><textarea name="notes" rows="2">${guest ? escapeHtml(guest.notes || "") : ""}</textarea></div>
   `;
   openModal(guest ? "Modifier l'invité" : "Ajouter un invité", fields, {
