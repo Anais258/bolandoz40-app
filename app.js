@@ -139,7 +139,7 @@ async function boot() {
     await applySaturdayPollOnce();
     await applyConversationUpdate1Once();
     await assignGroupsOnce();
-    await seedProgrammeOnce();
+    await seedOrConvertProgrammeOnce();
   } catch (e) {
     console.error("Erreur pendant la mise à jour des données (l'appli continue quand même)", e);
   }
@@ -327,63 +327,98 @@ let notesDoc = null;
 let notesSaveTimer = null;
 
 // ------------------------------------------------------------------
-// PROGRAMME DU WEEK-END — un seul bloc de texte modifiable par jour.
+// PROGRAMME DU WEEK-END — liste éditable par ligne (heure + description).
 // ------------------------------------------------------------------
 let programmeData = [];
 
 function initProgramme() {
   Store.subscribe("programme", (arr) => { programmeData = arr; renderProgramme(); });
-  document.getElementById("btn-edit-prog-samedi").addEventListener("click", () => openProgrammeModal("Samedi"));
-  document.getElementById("btn-edit-prog-dimanche").addEventListener("click", () => openProgrammeModal("Dimanche"));
+  document.getElementById("btn-add-prog-samedi").addEventListener("click", () => openProgrammeModal(null, "Samedi"));
+  document.getElementById("btn-add-prog-dimanche").addEventListener("click", () => openProgrammeModal(null, "Dimanche"));
 }
 
-function programmeTextFor(day) {
-  const doc = programmeData.find(p => p.day === day);
-  return doc ? (doc.text || "") : "";
-}
-
-function renderProgramme() {
-  document.getElementById("programme-samedi-view").textContent = programmeTextFor("Samedi") || "Rien pour l'instant.";
-  document.getElementById("programme-dimanche-view").textContent = programmeTextFor("Dimanche") || "Rien pour l'instant.";
-}
-
-function openProgrammeModal(day) {
-  const doc = programmeData.find(p => p.day === day);
-  const fields = `
-    <div class="field"><label>Programme du ${day}</label><textarea name="text" rows="12">${doc ? escapeHtml(doc.text || "") : ""}</textarea></div>
-  `;
-  openModal(`Modifier le programme du ${day}`, fields, {
-    saveLabel: "Enregistrer",
-    onSave: async (data) => {
-      if (doc) await Store.update("programme", doc.id, { text: data.text });
-      else await Store.add("programme", { day, text: data.text });
-    }
+function renderProgrammeDay(day, containerId) {
+  const container = document.getElementById(containerId);
+  const items = programmeData.filter(p => p.day === day).sort((a, b) => (a.order || 0) - (b.order || 0));
+  if (!items.length) { container.innerHTML = `<div class="empty-state">Rien pour l'instant.</div>`; return; }
+  container.innerHTML = items.map(p => `
+    <div class="list-item" data-id="${p.id}">
+      <div class="list-item-main">
+        <div class="list-item-title"><span class="prog-time">${escapeHtml(p.time || "")}</span></div>
+        <div class="list-item-sub">${escapeHtml(p.text || "")}</div>
+      </div>
+      <div class="list-item-actions"><button class="icon-btn edit-prog" title="Modifier">⋯</button></div>
+    </div>`).join("");
+  container.querySelectorAll(".list-item").forEach(el => {
+    el.querySelector(".edit-prog").addEventListener("click", () => openProgrammeModal(programmeData.find(p => p.id === el.dataset.id), day));
   });
 }
 
-// Reprend le planning déjà défini comme point de départ éditable, une seule fois.
+function renderProgramme() {
+  renderProgrammeDay("Samedi", "programme-samedi-list");
+  renderProgrammeDay("Dimanche", "programme-dimanche-list");
+}
+
+function openProgrammeModal(item, day) {
+  const dayItems = programmeData.filter(p => p.day === day);
+  const nextOrder = dayItems.length ? Math.max(...dayItems.map(p => p.order || 0)) + 1 : 0;
+  const fields = `
+    <div class="field"><label>Heure</label><input name="time" value="${item ? escapeAttr(item.time) : ""}" placeholder="ex. 14h00 ou 15h00–17h00" required></div>
+    <div class="field"><label>Description</label><textarea name="text" rows="2">${item ? escapeHtml(item.text || "") : ""}</textarea></div>
+    <div class="field"><label>Ordre d'affichage</label><input type="number" name="order" value="${item ? item.order || 0 : nextOrder}"></div>
+    <input type="hidden" name="day" value="${day}">
+  `;
+  openModal(item ? "Modifier le programme" : "Ajouter au programme", fields, {
+    saveLabel: "Enregistrer",
+    onSave: async (data) => {
+      if (item) await Store.update("programme", item.id, data);
+      else await Store.add("programme", data);
+    },
+    onDelete: item ? async () => Store.remove("programme", item.id) : null
+  });
+}
+
+// Reprend le planning déjà défini comme données de départ éditables, une seule fois.
 const programmeSeed = [
-  { day: "Samedi", text: [
-    "11h00–13h30 — Installation logistique (déco, tables, buffet)",
-    "14h00 — Ouverture des portes, accueil, installation chambres/dortoirs",
-    "14h30–15h00 — Constitution des 4 équipes, ateliers blason/chanson, briefing Olympiades",
-    "15h00–17h00 — Olympiades — 4 épreuves x 15 min, 3 pôles (rotation)",
-    "16h00 — Lancement de la cuisson du méchoui (prestataire)",
-    "17h00–17h30 — Grand Final \"Inter-Chambrées\"",
-    "17h30–18h00 — Résultats, remise des prix, détente",
-    "18h30 — Apéritif officiel (parents) — Crémant, bières locales",
-    "20h30 — Banquet — méchoui + accompagnements maison",
-    "22h00 — Fromages & gâteau d'anniversaire",
-    "23h00… — Soirée dansante (DJ)"
-  ].join("\n") },
-  { day: "Dimanche", text: [
-    "~9h30–11h30 — Brunch",
-    "Fin de matinée — Rangement, ménage, restitution de la salle",
-    "Début d'après-midi — Départ de Bolandoz"
-  ].join("\n") }
+  { day: "Samedi", order: 0, time: "11h00–13h30", text: "Installation logistique (déco, tables, buffet)" },
+  { day: "Samedi", order: 1, time: "14h00", text: "Ouverture des portes, accueil, installation chambres/dortoirs" },
+  { day: "Samedi", order: 2, time: "14h30–15h00", text: "Constitution des 4 équipes, ateliers blason/chanson, briefing Olympiades" },
+  { day: "Samedi", order: 3, time: "15h00–17h00", text: "Olympiades — 4 épreuves x 15 min, 3 pôles (rotation)" },
+  { day: "Samedi", order: 4, time: "16h00", text: "Lancement de la cuisson du méchoui (prestataire)" },
+  { day: "Samedi", order: 5, time: "17h00–17h30", text: "Grand Final \"Inter-Chambrées\"" },
+  { day: "Samedi", order: 6, time: "17h30–18h00", text: "Résultats, remise des prix, détente" },
+  { day: "Samedi", order: 7, time: "18h30", text: "Apéritif officiel (parents) — Crémant, bières locales" },
+  { day: "Samedi", order: 8, time: "20h30", text: "Banquet — méchoui + accompagnements maison" },
+  { day: "Samedi", order: 9, time: "22h00", text: "Fromages & gâteau d'anniversaire" },
+  { day: "Samedi", order: 10, time: "23h00…", text: "Soirée dansante (DJ)" },
+  { day: "Dimanche", order: 0, time: "~9h30–11h30", text: "Brunch" },
+  { day: "Dimanche", order: 1, time: "Fin de matinée", text: "Rangement, ménage, restitution de la salle" },
+  { day: "Dimanche", order: 2, time: "Début d'après-midi", text: "Départ de Bolandoz" }
 ];
-async function seedProgrammeOnce() {
-  await Store.seedIfEmpty("programme", programmeSeed);
+
+// Convertit d'anciens documents "un bloc de texte par jour" (format
+// intermédiaire) en lignes individuelles si besoin, sinon sème le
+// planning de départ si la liste est complètement vide.
+async function seedOrConvertProgrammeOnce() {
+  const existing = await Store.getAllOnce("programme");
+  const blobDocs = existing.filter(p => p.text !== undefined && p.time === undefined);
+  if (blobDocs.length) {
+    for (const doc of blobDocs) {
+      const lines = (doc.text || "").split("\n").map(l => l.trim()).filter(Boolean);
+      let order = 0;
+      for (const line of lines) {
+        const sep = line.indexOf(" — ");
+        const time = sep !== -1 ? line.slice(0, sep) : "";
+        const text = sep !== -1 ? line.slice(sep + 3) : line;
+        await Store.add("programme", { day: doc.day, time, text, order: order++ });
+      }
+      await Store.remove("programme", doc.id);
+    }
+    return;
+  }
+  if (!existing.length) {
+    for (const item of programmeSeed) await Store.add("programme", item);
+  }
 }
 
 function initNotes() {

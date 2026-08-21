@@ -69,7 +69,7 @@ main#views {
   box-shadow: 0 1px 3px rgba(0,0,0,.06);
 }
 .card h2 { margin: 0 0 8px; font-size: 15.5px; color: var(--sage); }
-.programme-text { white-space: pre-line; font-size: 14px; line-height: 1.6; }
+.prog-time { color: var(--terracotta); font-weight: 700; }
 .card p { margin: 0 0 8px; font-size: 14px; line-height: 1.5; }
 .card details { margin-top: 8px; border-top: 1px solid #eee; padding-top: 8px; }
 .card summary { font-weight: 600; font-size: 14px; color: var(--terracotta); cursor: pointer; }
