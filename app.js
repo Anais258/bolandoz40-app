@@ -146,13 +146,21 @@ async function boot() {
   }
   initNav();
   initCountdown();
-  initGuests();
-  initBudget();
-  initTasks();
-  initProgramme();
-  initNotes();
-  document.getElementById("btn-seed").addEventListener("click", runSeed);
-  document.getElementById("btn-force-refresh").addEventListener("click", forceRefresh);
+  const seedBtn = document.getElementById("btn-seed");
+  if (seedBtn) seedBtn.addEventListener("click", runSeed);
+  const forceBtn = document.getElementById("btn-force-refresh");
+  if (forceBtn) forceBtn.addEventListener("click", forceRefresh);
+
+  function safeInit(fn, label) {
+    try { fn(); } catch (e) {
+      console.error(`Erreur d'initialisation (${label}) — l'appli continue quand même.`, e);
+    }
+  }
+  safeInit(initGuests, "invités");
+  safeInit(initBudget, "budget");
+  safeInit(initTasks, "tâches");
+  safeInit(initProgramme, "programme");
+  safeInit(initNotes, "notes");
 }
 
 // ------------------------------------------------------------------
@@ -334,14 +342,19 @@ let programmeData = [];
 
 function initProgramme() {
   Store.subscribe("programme", (arr) => { programmeData = arr; renderProgramme(); });
-  document.getElementById("btn-add-prog-jeudi").addEventListener("click", () => openProgrammeModal(null, "Jeudi"));
-  document.getElementById("btn-add-prog-vendredi").addEventListener("click", () => openProgrammeModal(null, "Vendredi"));
-  document.getElementById("btn-add-prog-samedi").addEventListener("click", () => openProgrammeModal(null, "Samedi"));
-  document.getElementById("btn-add-prog-dimanche").addEventListener("click", () => openProgrammeModal(null, "Dimanche"));
+  const wireAddBtn = (id, day) => {
+    const btn = document.getElementById(id);
+    if (btn) btn.addEventListener("click", () => openProgrammeModal(null, day));
+  };
+  wireAddBtn("btn-add-prog-jeudi", "Jeudi");
+  wireAddBtn("btn-add-prog-vendredi", "Vendredi");
+  wireAddBtn("btn-add-prog-samedi", "Samedi");
+  wireAddBtn("btn-add-prog-dimanche", "Dimanche");
 }
 
 function renderProgrammeDay(day, containerId) {
   const container = document.getElementById(containerId);
+  if (!container) return;
   const items = programmeData.filter(p => p.day === day).sort((a, b) => (a.order || 0) - (b.order || 0));
   if (!items.length) { container.innerHTML = `<div class="empty-state">Rien pour l'instant.</div>`; return; }
   container.innerHTML = items.map(p => `
@@ -984,7 +997,7 @@ function openBudgetModal(item) {
 // Catégories combinées des deux anciennes listes.
 // Statuts : À faire / Réservé / Fait.
 // ------------------------------------------------------------------
-const TODO_CATEGORIES = ["Lieu", "Repas", "Brunch", "Boissons", "Déco", "Olympiades", "Activité", "Hébergement", "Invités", "Communication", "Hygiène/Logistique", "Divers"];
+const TODO_CATEGORIES = ["Lieu", "Repas", "Brunch", "Boissons", "Déco", "Olympiades", "Activités", "Hébergement", "Invités", "Communication", "Hygiène/Logistique", "Divers"];
 const TODO_STATUSES = ["À faire", "Réservé", "Fait"];
 const TODO_STATUS_ICON = { "À faire": "⬜️", "Réservé": "🟡", "Fait": "✅" };
 let tasksData = [];
