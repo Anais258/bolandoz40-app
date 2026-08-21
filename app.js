@@ -157,6 +157,7 @@ async function boot() {
     }
   }
   safeInit(initGuests, "invités");
+  safeInit(initRooms, "chambres");
   safeInit(initBudget, "budget");
   safeInit(initTasks, "tâches");
   safeInit(initProgramme, "programme");
@@ -756,6 +757,23 @@ function openModal(title, fieldsHtml, { onSave, onDelete, saveLabel = "Enregistr
 function tag(text, color) { return `<span class="tag tag-${color}">${text}</span>`; }
 const STATUS_COLOR = { "À faire": "red", "En cours": "yellow", "Fait": "green", "Réservé": "blue", "Payé": "green" };
 
+function renderTeamBalance() {
+  const el = document.getElementById("team-balance-summary");
+  if (!el) return;
+  const teams = ["Équipe 1", "Équipe 2", "Équipe 3", "Équipe 4"];
+  const counts = {};
+  teams.forEach(t => counts[t] = 0);
+  let unassigned = 0;
+  guestsData.forEach(g => {
+    const heads = 1 + (g.adults || 0) + (g.kids || 0);
+    if (teams.includes(g.team)) counts[g.team] += heads;
+    else unassigned += heads;
+  });
+  el.innerHTML = teams.map(t => tag(`${t} : ${counts[t]} pers.`, "purple")).join("")
+    + (unassigned ? tag(`Non assignés : ${unassigned} pers.`, "gray") : "");
+}
+
+
 // ------------------------------------------------------------------
 // INVITÉS
 // ------------------------------------------------------------------
@@ -801,6 +819,11 @@ function renderGuests() {
   const totalAdults = guestsData.length + guestsData.reduce((sum, g) => sum + (g.adults || 0), 0);
   const totalKids = guestsData.reduce((sum, g) => sum + (g.kids || 0), 0);
   document.getElementById("stat-guests").textContent = confirmedCount;
+  const cadreCountEl = document.getElementById("cadre-guest-count");
+  if (cadreCountEl) cadreCountEl.textContent = `${confirmedCount} invité${confirmedCount === 1 ? "" : "s"}.`;
+  const menuCountEl = document.getElementById("menu-guest-count");
+  if (menuCountEl) menuCountEl.textContent = confirmedCount;
+  renderTeamBalance();
   const breakdownEl = document.getElementById("stat-guests-breakdown");
   if (breakdownEl) {
     breakdownEl.textContent = (totalAdults || totalKids)
@@ -862,7 +885,10 @@ function openGuestModal(guest) {
       <div class="field"><label>Enfants</label><input type="number" name="kids" min="0" value="${guest ? guest.kids || 0 : 0}"></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Chambre / dortoir</label><input name="room" value="${guest ? escapeAttr(guest.room) : ""}"></div>
+      <div class="field"><label>Chambre / dortoir</label><select name="room">
+        <option value="">– Aucune / à définir –</option>
+        ${(roomsData || []).slice().sort((a, b) => (a.name || "").localeCompare(b.name || "")).map(r => `<option value="${escapeAttr(r.name)}" ${guest && guest.room === r.name ? "selected" : ""}>${escapeHtml(r.name)}${r.capacity ? ` (${r.capacity} places)` : ""}</option>`).join("")}
+      </select></div>
       <div class="field"><label>Équipe Olympiades</label>
         <select name="team"><option value="">–</option>${["Équipe 1", "Équipe 2", "Équipe 3", "Équipe 4"].map(s => `<option ${guest && guest.team === s ? "selected" : ""}>${s}</option>`).join("")}</select>
       </div>
@@ -989,6 +1015,61 @@ function openBudgetModal(item) {
   openModal(item ? "Modifier le poste" : "Nouveau poste de budget", fields, {
     onSave: async (data) => { if (item) await Store.update("budget", item.id, data); else await Store.add("budget", data); },
     onDelete: item ? async () => Store.remove("budget", item.id) : null
+  });
+}
+
+// ------------------------------------------------------------------
+// CHAMBRES / DORTOIRS
+// Chaque chambre a un nom + une capacité. L'occupation est calculée
+// automatiquement à partir des invités dont la fiche pointe vers cette
+// chambre (foyer entier : 1 + accompagnants adultes + enfants).
+// ------------------------------------------------------------------
+let roomsData = [];
+function initRooms() {
+  Store.subscribe("rooms", (arr) => { roomsData = arr; renderRooms(); renderGuests(); });
+  const btn = document.getElementById("btn-add-room");
+  if (btn) btn.addEventListener("click", () => openRoomModal(null));
+}
+
+function renderRooms() {
+  const list = document.getElementById("rooms-list");
+  if (!list) return;
+  const items = roomsData.slice().sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  if (!items.length) { list.innerHTML = `<div class="empty-state">Aucune chambre définie. Ajoutez vos chambres/dortoirs avec leur capacité.</div>`; return; }
+  list.innerHTML = items.map(r => {
+    const occupants = guestsData.filter(g => g.room === r.name);
+    const occupancy = occupants.reduce((sum, g) => sum + 1 + (g.adults || 0) + (g.kids || 0), 0);
+    const capacity = Number(r.capacity) || 0;
+    const remaining = capacity - occupancy;
+    const over = capacity > 0 && remaining < 0;
+    const namesLine = occupants.length
+      ? occupants.map(g => g.name).join(", ")
+      : "Personne assigné pour l'instant";
+    return `
+    <div class="list-item" data-id="${r.id}">
+      <div class="list-item-main">
+        <div class="list-item-title">${escapeHtml(r.name)}</div>
+        <div class="list-item-sub">${occupancy} / ${capacity || "?"} occupé${occupancy === 1 ? "" : "s"}${capacity ? ` · ${over ? "dépassement de " + Math.abs(remaining) : remaining + " place" + (remaining === 1 ? "" : "s") + " restante" + (remaining === 1 ? "" : "s")}` : ""}</div>
+        <div class="list-item-sub" style="margin-top:3px;">${escapeHtml(namesLine)}</div>
+        ${r.notes ? `<div class="list-item-tags">${tag(r.notes, "gray")}</div>` : ""}
+      </div>
+      <div class="list-item-actions">${over ? `<span style="font-size:11px;color:#c0392b;font-weight:700;">⚠️ complet</span>` : ""}<button class="icon-btn edit-room">✏️</button></div>
+    </div>`;
+  }).join("");
+  list.querySelectorAll(".list-item").forEach(el => {
+    el.querySelector(".edit-room").addEventListener("click", () => openRoomModal(roomsData.find(r => r.id === el.dataset.id)));
+  });
+}
+
+function openRoomModal(room) {
+  const fields = `
+    <div class="field"><label>Nom de la chambre / du dortoir</label><input name="name" value="${room ? escapeAttr(room.name) : ""}" required></div>
+    <div class="field"><label>Capacité (nombre de places)</label><input type="number" name="capacity" value="${room ? room.capacity || 0 : 0}"></div>
+    <div class="field"><label>Notes</label><textarea name="notes" rows="2">${room ? escapeHtml(room.notes || "") : ""}</textarea></div>
+  `;
+  openModal(room ? "Modifier la chambre" : "Nouvelle chambre / dortoir", fields, {
+    onSave: async (data) => { if (room) await Store.update("rooms", room.id, data); else await Store.add("rooms", data); },
+    onDelete: room ? async () => Store.remove("rooms", room.id) : null
   });
 }
 

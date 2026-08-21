@@ -51,7 +51,7 @@
       <p class="cadre-text">
         <strong>Samedi 26 septembre 2026</strong>, accueil à partir de 14h.<br>
         La Colo de Bolandoz — 29 grande rue, 25330 Bolandoz.<br>
-        100 invités.<br>
+        <span id="cadre-guest-count">100 invités.</span><br>
         Thème <em>Rencontres et retrouvailles</em>.<br>
         Brunch le dimanche, hébergement sur place.
       </p>
@@ -127,6 +127,7 @@
     <div class="card">
       <h2>🏅 Olympiades — 4 équipes mixtes</h2>
       <p><strong>Étape préliminaire (14h30-15h00) :</strong> constitution des équipes, nom de guerre, blason, hymne d'équipe.</p>
+      <div id="team-balance-summary" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;"></div>
       <details>
         <summary>Pôle Culture</summary>
         <p>Quiz 40 ans · Devine l'Objet (à l'aveugle) · Relais Culturel<br>
@@ -174,7 +175,7 @@
       <p>Méchoui confié à <strong>Belhadje</strong> (06 62 63 09 15) — service assuré par la fille d'Alima (06 60 39 95 68). Accompagnements <strong>faits maison</strong> (riz façon tchouchouka). Apéritif géré par <strong>les parents</strong>. Fromage <strong>acheté par vous</strong> : Comté, Cancoillotte, Morbier, Edel de Cléron ou Bochet.</p>
     </div>
     <div class="card">
-      <h2>⚖️ Quantités pour 100 personnes</h2>
+      <h2>⚖️ Quantités pour <span id="menu-guest-count">100</span> personnes</h2>
       <table class="schedule-table">
         <tr><td>Entrées</td><td>200 g/pers.</td><td>20 kg</td></tr>
         <tr><td>Riz tchouchouka</td><td>250 g/pers.</td><td>25 kg</td></tr>
@@ -191,6 +192,56 @@
         <tr><td>Bière locale</td><td>2 à 4 fûts</td></tr>
         <tr><td>Softs & eaux</td><td>40-60 L</td></tr>
       </table>
+    </div>
+  </section>
+
+  <!-- CHAMBRES -->
+  <section id="view-rooms" class="view">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <h2>🛏️ Chambres & dortoirs</h2>
+        <button class="btn-primary" id="btn-add-room" style="padding:6px 12px;font-size:12.5px;">+ Ajouter</button>
+      </div>
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:10px;">Définissez vos chambres/dortoirs avec leur capacité. Assignez ensuite chaque invité depuis sa fiche (onglet Invités) — l'occupation et les places restantes se calculent automatiquement.</p>
+      <div id="rooms-list" class="list"></div>
+    </div>
+  </section>
+
+  <!-- PRESTATAIRES -->
+  <section id="view-vendors" class="view">
+    <div class="card">
+      <h2>📇 Prestataires</h2>
+      <div class="list">
+        <div class="list-item">
+          <div class="list-item-main">
+            <div class="list-item-title">Méchoui — Belhadje</div>
+            <div class="list-item-sub">Service : la fille d'Alima</div>
+            <div class="list-item-tags"><span class="tag tag-gray">2 700 €</span><span class="tag tag-blue">Réservé</span></div>
+          </div>
+          <div class="list-item-actions">
+            <a href="tel:0662630915" style="font-size:12.5px;color:var(--sage);text-decoration:none;font-weight:600;">📞 Belhadje</a>
+            <a href="tel:0660399568" style="font-size:12.5px;color:var(--sage);text-decoration:none;font-weight:600;">📞 Fille d'Alima</a>
+          </div>
+        </div>
+        <div class="list-item">
+          <div class="list-item-main">
+            <div class="list-item-title">Photobooth — Click & Smile</div>
+            <div class="list-item-sub">07 60 92 26 74</div>
+            <div class="list-item-tags"><span class="tag tag-gray">210 €</span><span class="tag tag-blue">Réservé</span></div>
+          </div>
+          <div class="list-item-actions">
+            <a href="tel:0760922674" style="font-size:12.5px;color:var(--sage);text-decoration:none;font-weight:600;">📞 Appeler</a>
+          </div>
+        </div>
+        <div class="list-item">
+          <div class="list-item-main">
+            <div class="list-item-title">DJ / animation</div>
+            <div class="list-item-sub">Contact à compléter</div>
+            <div class="list-item-tags"><span class="tag tag-gray">700 €</span><span class="tag tag-blue">Réservé</span></div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:11.5px;color:var(--muted);margin-top:10px;">Dis-moi si tu veux que j'ajoute le contact du DJ, ou d'autres prestataires ici.</p>
     </div>
   </section>
 
@@ -218,6 +269,8 @@
   <div class="sheet-backdrop" id="more-backdrop"></div>
   <div class="sheet-content">
     <button class="sheet-item" data-view="budget">💶 Budget</button>
+    <button class="sheet-item" data-view="rooms">🛏️ Chambres & dortoirs</button>
+    <button class="sheet-item" data-view="vendors">📇 Prestataires</button>
     <button class="sheet-item" data-view="menu">🍽️ Menu & Traiteur</button>
     <button class="sheet-item" data-view="notes">📝 Notes en vrac</button>
     <button class="sheet-item" id="btn-force-refresh">🔄 Forcer la mise à jour de l'appli</button>
