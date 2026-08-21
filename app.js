@@ -141,6 +141,7 @@ async function boot() {
     await assignGroupsOnce();
     await convertLodgingBooleansToCountsOnce();
     await seedOrConvertProgrammeOnce();
+    await seedVendorsOnce();
   } catch (e) {
     console.error("Erreur pendant la mise à jour des données (l'appli continue quand même)", e);
   }
@@ -158,6 +159,7 @@ async function boot() {
   }
   safeInit(initGuests, "invités");
   safeInit(initRooms, "chambres");
+  safeInit(initVendors, "prestataires");
   safeInit(initBudget, "budget");
   safeInit(initTasks, "tâches");
   safeInit(initProgramme, "programme");
@@ -438,6 +440,23 @@ async function seedOrConvertProgrammeOnce() {
   if (!existing.length) {
     for (const item of programmeSeed) await Store.add("programme", item);
   }
+}
+
+async function seedVendorsOnce() {
+  const KEY = "vendors-seed-v1";
+  if (await migrationRan(KEY)) return;
+  const existing = await Store.getAllOnce("vendors");
+  if (existing.length === 0) {
+    const seed = [
+      { category: "Méchoui", name: "Belhadje", phone1Label: "Belhadje", phone1Number: "0662630915", phone2Label: "Fille d'Alima", phone2Number: "0660399568", notes: "Service assuré par la fille d'Alima.", cost: 2700, status: "Réservé" },
+      { category: "Photobooth", name: "Click & Smile", phone1Label: "Appeler", phone1Number: "0760922674", notes: "", cost: 210, status: "Réservé" },
+      { category: "DJ / animation", name: "", notes: "Contact à compléter.", cost: 700, status: "Réservé" }
+    ];
+    for (const v of seed) {
+      try { await Store.add("vendors", v); } catch (e) { console.error("Erreur ajout prestataire", v.category, e); }
+    }
+  }
+  await markMigrationRan(KEY);
 }
 
 function initNotes() {
@@ -1070,6 +1089,71 @@ function openRoomModal(room) {
   openModal(room ? "Modifier la chambre" : "Nouvelle chambre / dortoir", fields, {
     onSave: async (data) => { if (room) await Store.update("rooms", room.id, data); else await Store.add("rooms", data); },
     onDelete: room ? async () => Store.remove("rooms", room.id) : null
+  });
+}
+
+// ------------------------------------------------------------------
+// PRESTATAIRES
+// ------------------------------------------------------------------
+let vendorsData = [];
+function initVendors() {
+  Store.subscribe("vendors", (arr) => { vendorsData = arr; renderVendors(); });
+  const btn = document.getElementById("btn-add-vendor");
+  if (btn) btn.addEventListener("click", () => openVendorModal(null));
+}
+
+function renderVendors() {
+  const list = document.getElementById("vendors-list");
+  if (!list) return;
+  if (!vendorsData.length) { list.innerHTML = `<div class="empty-state">Aucun prestataire pour l'instant.</div>`; return; }
+  const items = vendorsData.slice().sort((a, b) => (a.category || "").localeCompare(b.category || ""));
+  list.innerHTML = items.map(v => {
+    const phones = [];
+    if (v.phone1Number) phones.push(`<a href="tel:${v.phone1Number.replace(/\s/g, "")}" style="font-size:12.5px;color:var(--sage);text-decoration:none;font-weight:600;">📞 ${escapeHtml(v.phone1Label || "Appeler")}</a>`);
+    if (v.phone2Number) phones.push(`<a href="tel:${v.phone2Number.replace(/\s/g, "")}" style="font-size:12.5px;color:var(--sage);text-decoration:none;font-weight:600;">📞 ${escapeHtml(v.phone2Label || "Appeler")}</a>`);
+    return `
+    <div class="list-item" data-id="${v.id}">
+      <div class="list-item-main">
+        <div class="list-item-title" style="color:var(--terracotta);">${escapeHtml(v.category || "Prestataire")}</div>
+        ${v.name ? `<div style="font-weight:700;font-size:13.5px;color:var(--ink);margin-top:2px;">${escapeHtml(v.name)}</div>` : ""}
+        ${v.notes ? `<div class="list-item-sub" style="margin-top:2px;">${escapeHtml(v.notes)}</div>` : ""}
+        <div class="list-item-tags">
+          ${v.cost ? tag(`${Number(v.cost).toLocaleString("fr-FR")} €`, "gray") : ""}
+          ${v.status ? tag(v.status, STATUS_COLOR[v.status] || "blue") : ""}
+        </div>
+      </div>
+      <div class="list-item-actions">
+        ${phones.join("")}
+        <button class="icon-btn edit-vendor">✏️</button>
+      </div>
+    </div>`;
+  }).join("");
+  list.querySelectorAll(".list-item").forEach(el => {
+    el.querySelector(".edit-vendor").addEventListener("click", () => openVendorModal(vendorsData.find(v => v.id === el.dataset.id)));
+  });
+}
+
+function openVendorModal(item) {
+  const fields = `
+    <div class="field"><label>Catégorie <span style="font-weight:400;color:var(--muted);">(ex. Méchoui, DJ, Fleuriste…)</span></label><input name="category" value="${item ? escapeAttr(item.category) : ""}" required></div>
+    <div class="field"><label>Nom du prestataire</label><input name="name" value="${item ? escapeAttr(item.name) : ""}"></div>
+    <div class="field-row">
+      <div class="field"><label>Téléphone 1 — libellé</label><input name="phone1Label" value="${item ? escapeAttr(item.phone1Label) : ""}" placeholder="ex. Belhadje"></div>
+      <div class="field"><label>Téléphone 1 — numéro</label><input name="phone1Number" value="${item ? escapeAttr(item.phone1Number) : ""}" placeholder="0612345678"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Téléphone 2 — libellé</label><input name="phone2Label" value="${item ? escapeAttr(item.phone2Label) : ""}" placeholder="optionnel"></div>
+      <div class="field"><label>Téléphone 2 — numéro</label><input name="phone2Number" value="${item ? escapeAttr(item.phone2Number) : ""}" placeholder="optionnel"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Coût estimé (€)</label><input type="number" name="cost" value="${item ? item.cost || 0 : 0}"></div>
+      <div class="field"><label>Statut</label><select name="status">${["À faire", "Réservé", "Payé"].map(s => `<option ${item && item.status === s ? "selected" : ""}>${s}</option>`).join("")}</select></div>
+    </div>
+    <div class="field"><label>Notes</label><textarea name="notes" rows="2">${item ? escapeHtml(item.notes || "") : ""}</textarea></div>
+  `;
+  openModal(item ? "Modifier le prestataire" : "Nouveau prestataire", fields, {
+    onSave: async (data) => { if (item) await Store.update("vendors", item.id, data); else await Store.add("vendors", data); },
+    onDelete: item ? async () => Store.remove("vendors", item.id) : null
   });
 }
 
