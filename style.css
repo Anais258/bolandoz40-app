@@ -127,7 +127,7 @@ main#views {
   gap: 6px;
   overflow-x: auto;
   padding-bottom: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 16px;
 }
 .chip {
   border: 1px solid #ddd4c4;

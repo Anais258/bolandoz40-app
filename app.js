@@ -334,6 +334,8 @@ let programmeData = [];
 
 function initProgramme() {
   Store.subscribe("programme", (arr) => { programmeData = arr; renderProgramme(); });
+  document.getElementById("btn-add-prog-jeudi").addEventListener("click", () => openProgrammeModal(null, "Jeudi"));
+  document.getElementById("btn-add-prog-vendredi").addEventListener("click", () => openProgrammeModal(null, "Vendredi"));
   document.getElementById("btn-add-prog-samedi").addEventListener("click", () => openProgrammeModal(null, "Samedi"));
   document.getElementById("btn-add-prog-dimanche").addEventListener("click", () => openProgrammeModal(null, "Dimanche"));
 }
@@ -356,6 +358,8 @@ function renderProgrammeDay(day, containerId) {
 }
 
 function renderProgramme() {
+  renderProgrammeDay("Jeudi", "programme-jeudi-list");
+  renderProgrammeDay("Vendredi", "programme-vendredi-list");
   renderProgrammeDay("Samedi", "programme-samedi-list");
   renderProgrammeDay("Dimanche", "programme-dimanche-list");
 }
@@ -791,9 +795,16 @@ function renderGuests() {
       : "";
   }
 
-  const countLine = guestCheckFilters.size
-    ? `<div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;">${items.length} invité${items.length === 1 ? "" : "s"} correspondant${items.length === 1 ? "" : "s"}</div>`
-    : "";
+  let countLine = "";
+  if (guestCheckFilters.size) {
+    const ficheLine = `${items.length} fiche${items.length === 1 ? "" : "s"} correspondante${items.length === 1 ? "" : "s"}`;
+    const perFilterTotals = Array.from(guestCheckFilters).map(key => {
+      const f = GUEST_CHECK_FILTERS.find(x => x.key === key);
+      const total = items.reduce((sum, g) => sum + (Number(g[key]) || 0), 0);
+      return `${total} pers. — ${f ? f.label : key}`;
+    }).join(" · ");
+    countLine = `<div style="font-size:12.5px;color:var(--muted);margin-bottom:8px;">${ficheLine}${perFilterTotals ? "<br>" + perFilterTotals : ""}</div>`;
+  }
 
   if (!items.length) {
     const msg = guestsData.length
