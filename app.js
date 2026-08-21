@@ -1261,10 +1261,25 @@ function escapeHtml(str) {
 }
 function escapeAttr(str) { return escapeHtml(str); }
 
-// Service worker
+// Service worker — installation + vérification automatique d'une
+// nouvelle version à chaque lancement de l'appli (sans bouton à taper).
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
+  window.addEventListener("load", async () => {
+    try {
+      const reg = await navigator.serviceWorker.register("sw.js");
+      // Force une vérification immédiate d'une nouvelle version au lancement,
+      // au lieu d'attendre la vérification périodique par défaut du navigateur.
+      reg.update().catch(() => {});
+    } catch (e) { /* pas grave, l'appli fonctionne quand même */ }
+  });
+
+  // Dès qu'une nouvelle version prend le contrôle (après mise à jour des
+  // fichiers), on recharge la page une seule fois pour l'appliquer.
+  let reloadedForUpdate = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (reloadedForUpdate) return;
+    reloadedForUpdate = true;
+    location.reload();
   });
 }
 
